@@ -1,0 +1,1663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gastric Psyche — Research System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+
+/* ─────────────────────────────────────────
+   TOKENS
+───────────────────────────────────────── */
+:root {
+  --ink:         #0e0d0b;
+  --parchment:   #f4f0e8;
+  --ivory:       #faf8f3;
+  --rust:        #c44b2b;
+  --rust-dim:    #8a3520;
+  --gold:        #b8960c;
+  --gold-pale:   #e8d88a;
+  --sage:        #3d5a47;
+  --ash:         #7a7670;
+  --ash-light:   #cbc7bc;
+  --wire:        rgba(14,13,11,0.09);
+  --wire-med:    rgba(14,13,11,0.16);
+  --wire-strong: rgba(14,13,11,0.26);
+  --serif:       'Cormorant Garamond', Georgia, serif;
+  --mono:        'DM Mono', 'Courier New', monospace;
+  --sw:          240px;
+}
+
+/* ─────────────────────────────────────────
+   RESET
+───────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  background: var(--ivory);
+  color: var(--ink);
+  font-family: var(--serif);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─────────────────────────────────────────
+   GRAIN OVERLAY
+───────────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9000;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ─────────────────────────────────────────
+   APP SHELL
+   Sidebar: sticky column on the left
+   Main: everything to the right, scrolls normally
+───────────────────────────────────────── */
+.shell {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* ─────────────────────────────────────────
+   SIDEBAR
+───────────────────────────────────────── */
+.sidebar {
+  width: var(--sw);
+  min-width: var(--sw);
+  max-width: var(--sw);
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  height: 100vh;
+  overflow-y: auto;
+  background: var(--parchment);
+  border-right: 0.5px solid var(--wire-strong);
+  display: flex;
+  flex-direction: column;
+}
+.sidebar::-webkit-scrollbar { width: 2px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--ash-light); border-radius: 1px; }
+
+.sidebar-top {
+  padding: 1.75rem 1.5rem 1.25rem;
+  border-bottom: 0.5px solid var(--wire-med);
+  flex-shrink: 0;
+}
+.site-name {
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--ink);
+  line-height: 1.2;
+  margin-bottom: 0.35rem;
+  white-space: nowrap;
+}
+.site-tagline {
+  font-family: var(--mono);
+  font-size: 0.49rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ash);
+  line-height: 1.7;
+}
+
+.sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem 0 1rem;
+}
+.nav-group {
+  padding: 0 1rem 1rem;
+}
+.nav-group + .nav-group {
+  border-top: 0.5px solid var(--wire);
+  padding-top: 1rem;
+}
+.nav-group-label {
+  font-family: var(--mono);
+  font-size: 0.44rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ash-light);
+  margin-bottom: 0.5rem;
+  padding-left: 0.4rem;
+}
+.nav-btn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.46rem 0.55rem;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: left;
+  color: var(--ash);
+  transition: background 0.15s, color 0.15s;
+  margin-bottom: 1px;
+}
+.nav-btn:hover  { background: rgba(14,13,11,0.05); color: var(--ink); }
+.nav-btn.active { background: var(--ivory); color: var(--ink); }
+.nav-btn.active .nb-dot { background: var(--rust); }
+
+.nb-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ash-light);
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.nb-text {
+  font-family: var(--serif);
+  font-size: 0.84rem;
+  font-weight: 300;
+  flex: 1;
+  line-height: 1;
+  white-space: nowrap;
+}
+.nb-count {
+  font-family: var(--mono);
+  font-size: 0.44rem;
+  color: var(--ash-light);
+  background: rgba(14,13,11,0.06);
+  padding: 0.1rem 0.32rem;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.theme-subnav {
+  display: none;
+  padding-left: 0.9rem;
+  margin-top: 1px;
+}
+.theme-subnav.open { display: block; }
+
+.theme-sub-btn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.33rem 0.45rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  color: var(--ash);
+  border-radius: 3px;
+  transition: color 0.15s, background 0.15s;
+}
+.theme-sub-btn:hover { color: var(--ink); background: rgba(14,13,11,0.04); }
+.theme-sub-btn.active { color: var(--rust); }
+.tsb-num {
+  font-family: var(--mono);
+  font-size: 0.43rem;
+  color: var(--ash-light);
+  flex-shrink: 0;
+}
+.tsb-label {
+  font-family: var(--serif);
+  font-size: 0.72rem;
+  font-weight: 300;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-bottom {
+  padding: 1rem 1.5rem;
+  border-top: 0.5px solid var(--wire-med);
+  flex-shrink: 0;
+}
+.sb-line {
+  font-family: var(--mono);
+  font-size: 0.44rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ash-light);
+  line-height: 1.9;
+  white-space: nowrap;
+}
+
+/* ─────────────────────────────────────────
+   MAIN CONTENT AREA
+───────────────────────────────────────── */
+.main {
+  flex: 1;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+/* views hidden/shown */
+.view { display: none; }
+.view.active { display: block; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.view.active { animation: fadeUp 0.22s ease; }
+
+/* ─────────────────────────────────────────
+   SHARED LAYOUT COMPONENTS
+───────────────────────────────────────── */
+.page-header {
+  padding: 3rem 3.5rem 2rem;
+  border-bottom: 0.5px solid var(--wire-med);
+}
+.ph-eyebrow {
+  font-family: var(--mono);
+  font-size: 0.52rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ash);
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+.ph-eyebrow::before {
+  content: '';
+  display: inline-block;
+  width: 1.5rem;
+  height: 0.5px;
+  background: var(--ash);
+  flex-shrink: 0;
+}
+.ph-title {
+  font-family: var(--serif);
+  font-size: 2.4rem;
+  font-weight: 300;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  margin-bottom: 0.75rem;
+  max-width: 700px;
+}
+.ph-title em { font-style: italic; color: var(--rust); }
+.ph-sub {
+  font-family: var(--serif);
+  font-size: 0.92rem;
+  font-weight: 300;
+  color: var(--ash);
+  line-height: 1.8;
+  max-width: 60ch;
+}
+.page-body { padding: 2.5rem 3.5rem; }
+
+.s-label {
+  font-family: var(--mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ash);
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+.s-label::before {
+  content: '';
+  display: inline-block;
+  width: 1.2rem;
+  height: 0.5px;
+  background: var(--ash-light);
+  flex-shrink: 0;
+}
+.divider {
+  border: none;
+  border-top: 0.5px solid var(--wire-med);
+  margin: 2.5rem 0;
+}
+
+/* two-column grid utility */
+.two-col {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 2rem;
+}
+
+/* ─────────────────────────────────────────
+   HOME VIEW
+───────────────────────────────────────── */
+.hero-statement {
+  padding: 3.5rem 3.5rem 2.5rem;
+  border-bottom: 0.5px solid var(--wire-med);
+}
+.hs-eyebrow {
+  font-family: var(--mono);
+  font-size: 0.52rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ash);
+  margin-bottom: 1.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.hs-eyebrow::before {
+  content: '';
+  display: inline-block;
+  width: 2rem;
+  height: 0.5px;
+  background: var(--ash);
+  flex-shrink: 0;
+}
+.hs-title {
+  font-family: var(--serif);
+  font-size: 4rem;
+  font-weight: 300;
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin-bottom: 1.75rem;
+  max-width: 700px;
+}
+.hs-title em { font-style: italic; color: var(--rust); }
+.hs-thesis {
+  font-family: var(--serif);
+  font-size: 0.97rem;
+  font-weight: 300;
+  line-height: 1.85;
+  color: var(--ash);
+  max-width: 58ch;
+}
+.home-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+}
+.home-col {
+  padding: 2.5rem 3.5rem;
+}
+.home-col + .home-col {
+  border-left: 0.5px solid var(--wire-med);
+}
+.concept-text p {
+  font-family: var(--serif);
+  font-size: 0.94rem;
+  font-weight: 300;
+  line-height: 1.9;
+  color: var(--ink);
+  margin-bottom: 1.4rem;
+}
+.concept-text p:last-child { margin-bottom: 0; }
+.positioning-block {
+  background: var(--ink);
+  padding: 2rem;
+  margin-top: 2.25rem;
+}
+.pb-label {
+  font-family: var(--mono);
+  font-size: 0.48rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-pale);
+  opacity: 0.65;
+  margin-bottom: 0.9rem;
+}
+.pb-statement {
+  font-family: var(--serif);
+  font-size: 0.95rem;
+  font-weight: 300;
+  line-height: 1.85;
+  color: var(--parchment);
+}
+.pb-statement em { color: var(--gold-pale); font-style: italic; }
+
+/* theme index list on home */
+.theme-index { border-top: 0.5px solid var(--wire-med); }
+.ti-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 0.25rem;
+  border-bottom: 0.5px solid var(--wire);
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background 0.15s;
+}
+.ti-row:hover { background: rgba(196,75,43,0.04); }
+.ti-num {
+  font-family: var(--mono);
+  font-size: 0.5rem;
+  color: var(--ash-light);
+  letter-spacing: 0.08em;
+  flex-shrink: 0;
+  width: 2rem;
+}
+.ti-title {
+  font-family: var(--serif);
+  font-size: 0.88rem;
+  font-weight: 400;
+  color: var(--ink);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ti-tag {
+  font-family: var(--mono);
+  font-size: 0.44rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ash);
+  background: rgba(14,13,11,0.05);
+  padding: 0.14rem 0.42rem;
+  border-radius: 2px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ─────────────────────────────────────────
+   THEMES VIEW
+───────────────────────────────────────── */
+.theme-detail { display: none; }
+.theme-detail.active { display: block; }
+
+.theme-nav-bar {
+  display: flex;
+  flex-direction: row;
+  overflow-x: auto;
+  border-bottom: 0.5px solid var(--wire-med);
+  background: var(--ivory);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+.theme-nav-bar::-webkit-scrollbar { height: 2px; }
+.theme-nav-bar::-webkit-scrollbar-thumb { background: var(--ash-light); }
+
+.tnb-btn {
+  font-family: var(--mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ash);
+  background: none;
+  border: none;
+  border-bottom: 1.5px solid transparent;
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.tnb-btn:hover { color: var(--ink); }
+.tnb-btn.active { color: var(--rust); border-bottom-color: var(--rust); }
+
+.theme-body { padding: 2.5rem 3.5rem; }
+
+.theme-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 3rem;
+  margin-bottom: 2.5rem;
+  align-items: start;
+}
+.tt-cat {
+  font-family: var(--mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--rust);
+  margin-bottom: 0.7rem;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.tt-cat::before {
+  content: '';
+  display: inline-block;
+  width: 1rem;
+  height: 0.5px;
+  background: var(--rust);
+  flex-shrink: 0;
+}
+.tt-name {
+  font-family: var(--serif);
+  font-size: 1.75rem;
+  font-weight: 300;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin-bottom: 1.1rem;
+}
+.tt-gap {
+  font-family: var(--mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.07em;
+  line-height: 1.7;
+  color: var(--ash);
+  text-transform: uppercase;
+  border: 0.5px solid var(--wire-med);
+  padding: 0.55rem 0.8rem;
+  display: inline-block;
+}
+.tt-desc {
+  font-family: var(--serif);
+  font-size: 0.93rem;
+  font-weight: 300;
+  line-height: 1.9;
+  color: var(--ink);
+}
+
+.theme-rqs { margin-bottom: 2.5rem; }
+.rq-item {
+  display: flex;
+  flex-direction: row;
+  gap: 0.9rem;
+  padding: 0.85rem 0;
+  border-top: 0.5px solid var(--wire);
+}
+.rq-item:last-child { border-bottom: 0.5px solid var(--wire); }
+.rq-mark {
+  font-family: var(--mono);
+  font-size: 0.5rem;
+  color: var(--rust);
+  flex-shrink: 0;
+  margin-top: 0.22rem;
+}
+.rq-text {
+  font-family: var(--serif);
+  font-size: 0.88rem;
+  font-style: italic;
+  font-weight: 300;
+  color: var(--ash);
+  line-height: 1.7;
+}
+
+.theme-two-col {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.field-card {
+  background: var(--parchment);
+  border: 0.5px solid var(--wire-med);
+  border-radius: 4px;
+  padding: 1.5rem;
+}
+.fc-label {
+  font-family: var(--mono);
+  font-size: 0.47rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ash);
+  margin-bottom: 1rem;
+}
+.fc-item {
+  padding: 0.6rem 0;
+  border-bottom: 0.5px solid var(--wire);
+}
+.fc-item:last-child { border-bottom: none; }
+.fc-item-title {
+  font-family: var(--serif);
+  font-size: 0.84rem;
+  font-weight: 400;
+  color: var(--ink);
+  margin-bottom: 0.15rem;
+}
+.fc-item-sub {
+  font-family: var(--mono);
+  font-size: 0.46rem;
+  letter-spacing: 0.06em;
+  color: var(--ash);
+  text-transform: uppercase;
+}
+
+.notes-card {
+  background: var(--ivory);
+  border: 0.5px solid var(--wire-med);
+  border-radius: 4px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+.nc-label {
+  font-family: var(--mono);
+  font-size: 0.47rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ash);
+  margin-bottom: 0.85rem;
+}
+.notes-textarea {
+  font-family: var(--serif);
+  font-size: 0.86rem;
+  font-weight: 300;
+  line-height: 1.8;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  resize: none;
+  width: 100%;
+  min-height: 130px;
+  outline: none;
+}
+.notes-textarea::placeholder { color: var(--ash-light); font-style: italic; }
+.notes-save {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 0.5px solid var(--wire);
+}
+.save-btn {
+  font-family: var(--mono);
+  font-size: 0.47rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ash);
+  background: none;
+  border: 0.5px solid var(--wire-med);
+  padding: 0.38rem 0.85rem;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.save-btn:hover { color: var(--rust); border-color: var(--rust); }
+.save-feedback {
+  font-family: var(--mono);
+  font-size: 0.44rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sage);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.synthesis-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+.syn-tag {
+  font-family: var(--mono);
+  font-size: 0.47rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ash);
+  border: 0.5px solid var(--wire-med);
+  padding: 0.22rem 0.55rem;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.syn-tag:hover  { color: var(--rust); border-color: var(--rust); background: rgba(196,75,43,0.04); }
+.syn-tag.linked { color: var(--rust); border-color: var(--rust); background: rgba(196,75,43,0.06); }
+
+/* ─────────────────────────────────────────
+   SYNTHESIS VIEW
+───────────────────────────────────────── */
+.matrix-wrap {
+  overflow-x: auto;
+  margin-bottom: 2.5rem;
+  -webkit-overflow-scrolling: touch;
+}
+.matrix {
+  border: 0.5px solid var(--wire-med);
+  border-radius: 4px;
+  overflow: hidden;
+  min-width: 640px;
+}
+.matrix-row {
+  display: grid;
+  grid-template-columns: 130px repeat(7, 1fr);
+  border-bottom: 0.5px solid var(--wire);
+}
+.matrix-row:last-child { border-bottom: none; }
+.matrix-row.header { background: var(--parchment); }
+
+.matrix-cell {
+  padding: 0.6rem 0.65rem;
+  border-right: 0.5px solid var(--wire);
+  font-size: 0.8rem;
+  font-family: var(--serif);
+  font-weight: 300;
+  color: var(--ink);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.matrix-cell:last-child { border-right: none; }
+.matrix-cell.header-cell {
+  font-family: var(--mono);
+  font-size: 0.44rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ash);
+  white-space: normal;
+}
+.matrix-cell.theme-cell {
+  font-style: italic;
+  font-weight: 400;
+  font-size: 0.76rem;
+  white-space: normal;
+  overflow: visible;
+}
+.matrix-cell.link-cell {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  color: var(--ash-light);
+  text-align: center;
+  white-space: nowrap;
+}
+.matrix-cell.strong-link {
+  color: var(--rust);
+  background: rgba(196,75,43,0.05);
+  text-align: center;
+}
+
+.connection-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1.5rem;
+}
+.connection-card {
+  background: var(--parchment);
+  border: 0.5px solid var(--wire-med);
+  border-radius: 4px;
+  padding: 1.5rem;
+}
+.cc-themes {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.65rem;
+}
+.cc-theme-pill {
+  font-family: var(--mono);
+  font-size: 0.44rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rust);
+  border: 0.5px solid var(--rust);
+  padding: 0.17rem 0.44rem;
+  border-radius: 2px;
+}
+.cc-connector {
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  color: var(--ash-light);
+}
+.cc-insight {
+  font-family: var(--serif);
+  font-size: 0.86rem;
+  font-style: italic;
+  color: var(--ink);
+  line-height: 1.55;
+  margin-bottom: 0.55rem;
+}
+.cc-why {
+  font-family: var(--serif);
+  font-size: 0.78rem;
+  font-weight: 300;
+  color: var(--ash);
+  line-height: 1.65;
+}
+
+/* ─────────────────────────────────────────
+   FIELD INTELLIGENCE VIEW
+───────────────────────────────────────── */
+.intel-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1.5rem;
+}
+.intel-card {
+  background: var(--parchment);
+  border: 0.5px solid var(--wire-med);
+  border-radius: 4px;
+  padding: 1.5rem;
+}
+.ic-label {
+  font-family: var(--mono);
+  font-size: 0.47rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ash);
+  margin-bottom: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.ic-label::before {
+  content: '';
+  display: inline-block;
+  width: 0.8rem;
+  height: 0.5px;
+  background: var(--ash-light);
+  flex-shrink: 0;
+}
+.researcher-item {
+  padding: 0.75rem 0;
+  border-bottom: 0.5px solid var(--wire);
+}
+.researcher-item:last-child { border-bottom: none; }
+.ri-name {
+  font-family: var(--serif);
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--ink);
+  margin-bottom: 0.14rem;
+}
+.ri-inst {
+  font-family: var(--mono);
+  font-size: 0.45rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ash);
+  margin-bottom: 0.2rem;
+}
+.ri-focus {
+  font-family: var(--serif);
+  font-size: 0.75rem;
+  font-style: italic;
+  font-weight: 300;
+  color: var(--ash);
+  line-height: 1.5;
+}
+.journal-item {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.68rem 0;
+  border-bottom: 0.5px solid var(--wire);
+}
+.journal-item:last-child { border-bottom: none; }
+.ji-name {
+  font-family: var(--serif);
+  font-size: 0.86rem;
+  font-weight: 400;
+  color: var(--ink);
+}
+.ji-focus {
+  font-family: var(--mono);
+  font-size: 0.43rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ash);
+  text-align: right;
+  flex-shrink: 0;
+  max-width: 40%;
+  line-height: 1.5;
+}
+.foundational-item {
+  padding: 0.72rem 0;
+  border-bottom: 0.5px solid var(--wire);
+}
+.foundational-item:last-child { border-bottom: none; }
+.fi-title {
+  font-family: var(--serif);
+  font-size: 0.86rem;
+  font-weight: 400;
+  color: var(--ink);
+  margin-bottom: 0.12rem;
+}
+.fi-author {
+  font-family: var(--mono);
+  font-size: 0.45rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ash);
+  margin-bottom: 0.18rem;
+}
+.fi-relevance {
+  font-family: var(--serif);
+  font-size: 0.74rem;
+  font-style: italic;
+  font-weight: 300;
+  color: var(--ash);
+}
+.emerging-item {
+  padding: 0.68rem 0;
+  border-bottom: 0.5px solid var(--wire);
+}
+.emerging-item:last-child { border-bottom: none; }
+.ei-title {
+  font-family: var(--serif);
+  font-size: 0.86rem;
+  color: var(--ink);
+  margin-bottom: 0.18rem;
+}
+.ei-body {
+  font-family: var(--serif);
+  font-size: 0.76rem;
+  font-weight: 300;
+  color: var(--ash);
+  line-height: 1.6;
+}
+
+/* ─────────────────────────────────────────
+   NOVEL IDEAS VIEW
+───────────────────────────────────────── */
+.idea-block {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr) minmax(0, 1.5fr);
+  gap: 2.5rem;
+  align-items: start;
+  padding: 2.5rem 0;
+  border-bottom: 0.5px solid var(--wire-med);
+}
+.idea-block:first-child { padding-top: 0; }
+.idea-block:last-child { border-bottom: none; }
+
+.ib-roman {
+  font-family: var(--serif);
+  font-size: 3rem;
+  font-weight: 300;
+  color: var(--ash-light);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.ib-tag {
+  font-family: var(--mono);
+  font-size: 0.47rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--rust);
+  margin-bottom: 0.55rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.ib-tag::before {
+  content: '';
+  display: inline-block;
+  width: 0.8rem;
+  height: 0.5px;
+  background: var(--rust);
+  flex-shrink: 0;
+}
+.ib-title {
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  font-weight: 300;
+  line-height: 1.25;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+.ib-body {
+  font-family: var(--serif);
+  font-size: 0.9rem;
+  font-weight: 300;
+  line-height: 1.9;
+  color: var(--ink);
+  margin-bottom: 1rem;
+}
+.ib-why {
+  font-family: var(--mono);
+  font-size: 0.47rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ash);
+  border: 0.5px solid var(--wire-med);
+  padding: 0.5rem 0.7rem;
+  display: inline-block;
+  line-height: 1.6;
+}
+
+/* ─────────────────────────────────────────
+   ROADMAP VIEW
+───────────────────────────────────────── */
+.roadmap-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr);
+  gap: 3.5rem;
+  align-items: start;
+}
+.rl-title {
+  font-family: var(--serif);
+  font-size: 1.9rem;
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  margin-bottom: 1.25rem;
+}
+.rl-title em { font-style: italic; color: var(--rust); }
+.rl-body {
+  font-family: var(--serif);
+  font-size: 0.86rem;
+  font-weight: 300;
+  line-height: 1.85;
+  color: var(--ash);
+  margin-bottom: 1.75rem;
+}
+.rlt-label {
+  font-family: var(--mono);
+  font-size: 0.46rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ash-light);
+  margin-bottom: 0.65rem;
+}
+.rlt-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.45rem 0;
+  border-bottom: 0.5px solid var(--wire);
+  font-family: var(--serif);
+  font-size: 0.78rem;
+  font-weight: 300;
+  color: var(--ink);
+}
+.rlt-row:last-child { border-bottom: none; }
+.rlt-prog {
+  font-family: var(--mono);
+  font-size: 0.46rem;
+  color: var(--ash-light);
+}
+
+.timeline { position: relative; }
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 1.05rem;
+  top: 0;
+  bottom: 0;
+  width: 0.5px;
+  background: var(--wire-med);
+}
+.timeline-step {
+  display: flex;
+  flex-direction: row;
+  gap: 2.25rem;
+  align-items: flex-start;
+  padding: 2rem 0;
+  border-bottom: 0.5px solid var(--wire);
+}
+.timeline-step:first-child { padding-top: 0; }
+.timeline-step:last-child { border-bottom: none; }
+
+.ts-marker {
+  width: 2.1rem;
+  height: 2.1rem;
+  border: 0.5px solid var(--wire-strong);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ivory);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+.ts-marker span {
+  font-family: var(--mono);
+  font-size: 0.41rem;
+  letter-spacing: 0.06em;
+  color: var(--ash);
+  text-transform: uppercase;
+}
+.ts-marker.current { border-color: var(--rust); }
+.ts-marker.current span { color: var(--rust); }
+
+.ts-body { flex: 1; min-width: 0; }
+.ts-when {
+  font-family: var(--mono);
+  font-size: 0.47rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--rust);
+  margin-bottom: 0.35rem;
+}
+.ts-title {
+  font-family: var(--serif);
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--ink);
+  margin-bottom: 0.44rem;
+}
+.ts-desc {
+  font-family: var(--serif);
+  font-size: 0.83rem;
+  font-weight: 300;
+  line-height: 1.78;
+  color: var(--ash);
+  margin-bottom: 0.65rem;
+}
+.ts-journals {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.ts-journal {
+  font-family: var(--mono);
+  font-size: 0.43rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gold);
+  border: 0.5px solid rgba(184,150,12,0.3);
+  padding: 0.14rem 0.44rem;
+  border-radius: 2px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-top">
+    <div class="site-name">Gastric Psyche</div>
+    <div class="site-tagline">Personal Research System<br>Food · Identity · Psychology</div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-group">
+      <div class="nav-group-label">System</div>
+      <button class="nav-btn active" onclick="show('home', this)">
+        <div class="nb-dot"></div>
+        <span class="nb-text">Overview</span>
+      </button>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">Research</div>
+      <button class="nav-btn" onclick="toggleThemeNav(this)">
+        <div class="nb-dot"></div>
+        <span class="nb-text">Research Themes</span>
+        <span class="nb-count">7</span>
+      </button>
+      <div class="theme-subnav" id="theme-subnav">
+        <button class="theme-sub-btn" onclick="showTheme(0)"><span class="tsb-num">01</span><span class="tsb-label">Edible Morality</span></button>
+        <button class="theme-sub-btn" onclick="showTheme(1)"><span class="tsb-num">02</span><span class="tsb-label">Hunger &amp; Time</span></button>
+        <button class="theme-sub-btn" onclick="showTheme(2)"><span class="tsb-num">03</span><span class="tsb-label">Food Grief</span></button>
+        <button class="theme-sub-btn" onclick="showTheme(3)"><span class="tsb-num">04</span><span class="tsb-label">Menu Semiotics</span></button>
+        <button class="theme-sub-btn" onclick="showTheme(4)"><span class="tsb-num">05</span><span class="tsb-label">Gut &amp; Interoception</span></button>
+        <button class="theme-sub-btn" onclick="showTheme(5)"><span class="tsb-num">06</span><span class="tsb-label">Fasting &amp; Existence</span></button>
+        <button class="theme-sub-btn" onclick="showTheme(6)"><span class="tsb-num">07</span><span class="tsb-label">Algorithmic Food Self</span></button>
+      </div>
+      <button class="nav-btn" onclick="show('synthesis', this)">
+        <div class="nb-dot"></div>
+        <span class="nb-text">Synthesis Map</span>
+      </button>
+      <button class="nav-btn" onclick="show('intel', this)">
+        <div class="nb-dot"></div>
+        <span class="nb-text">Field Intelligence</span>
+      </button>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">Direction</div>
+      <button class="nav-btn" onclick="show('ideas', this)">
+        <div class="nb-dot"></div>
+        <span class="nb-text">Novel Ideas</span>
+        <span class="nb-count">3</span>
+      </button>
+      <button class="nav-btn" onclick="show('roadmap', this)">
+        <div class="nb-dot"></div>
+        <span class="nb-text">Publication Roadmap</span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="sb-line">Prototype · 2025</div>
+    <div class="sb-line">India × UK Research Sites</div>
+    <div class="sb-line">Personal Use Only</div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- HOME -->
+  <div class="view active" id="view-home">
+    <div class="hero-statement">
+      <div class="hs-eyebrow">Doctoral Research System · Food Psychology · Cultural Identity</div>
+      <h1 class="hs-title">The table is where<br>the <em>self is made.</em></h1>
+      <p class="hs-thesis">A personal research system for an emerging subfield — Gastropsychology — studying how eating behaviour constructs identity, encodes morality, and archives culture. This is a thinking tool, not a publication. Everything here exists to help clarify, track, and deepen the work.</p>
+    </div>
+    <div class="home-grid">
+      <div class="home-col">
+        <div class="s-label">Core Concept</div>
+        <div class="concept-text">
+          <p>Every school of psychology has treated food as a symptom — a behaviour to manage, a craving to regulate, a disorder to diagnose. This research programme proposes the opposite: food is not a symptom of the self, but its primary construction material. Before we had language for who we are, we had food rituals that made us who we are.</p>
+          <p>The specific focus is three-part: how food encodes <em>moral identity</em>, how it preserves and transmits <em>cultural memory</em>, and how digital food environments are now disrupting both — in ways psychology has not yet measured.</p>
+          <p>The proposed subfield — Gastropsychology — sits at the intersection of moral psychology, cultural anthropology, embodied cognition, and digital behaviour. India is the primary field site: the most food-morally complex society on earth, and almost completely absent from the Western psychology literature.</p>
+        </div>
+        <div class="positioning-block">
+          <div class="pb-label">Researcher Positioning</div>
+          <p class="pb-statement">I am a psychologist working at the boundary where the body meets culture. My research treats eating not as a health behaviour but as a <em>philosophical act</em> — one that encodes identity, rehearses morality, and archives civilisation. I am building the foundations of a subfield that takes seriously what every grandmother and every anthropologist already knows, but what experimental psychology has barely touched.</p>
+        </div>
+      </div>
+      <div class="home-col">
+        <div class="s-label">Research Index</div>
+        <div class="theme-index" id="home-theme-index"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THEMES -->
+  <div class="view" id="view-themes">
+    <div class="theme-nav-bar" id="theme-nav-bar"></div>
+    <div id="theme-panels"></div>
+  </div>
+
+  <!-- SYNTHESIS -->
+  <div class="view" id="view-synthesis">
+    <div class="page-header">
+      <div class="ph-eyebrow">Research Synthesis</div>
+      <h2 class="ph-title">How the themes <em>connect</em></h2>
+      <p class="ph-sub">Each research theme is a node in a larger network. Understanding the connections between them reveals the architecture of the subfield — and where the most original contributions can be made.</p>
+    </div>
+    <div class="page-body">
+      <div class="s-label">Cross-Theme Connection Matrix</div>
+      <div class="matrix-wrap"><div class="matrix" id="synthesis-matrix"></div></div>
+      <hr class="divider">
+      <div class="s-label">Key Intersections</div>
+      <div class="connection-grid" id="connection-grid"></div>
+    </div>
+  </div>
+
+  <!-- FIELD INTELLIGENCE -->
+  <div class="view" id="view-intel">
+    <div class="page-header">
+      <div class="ph-eyebrow">Field Intelligence</div>
+      <h2 class="ph-title">Who is working here.<br><em>What has been written.</em></h2>
+      <p class="ph-sub">The researchers, journals, foundational texts, and emerging directions that define the territory. This is the map of the intellectual landscape you are entering.</p>
+    </div>
+    <div class="page-body">
+      <div class="intel-grid" id="intel-grid"></div>
+    </div>
+  </div>
+
+  <!-- NOVEL IDEAS -->
+  <div class="view" id="view-ideas">
+    <div class="page-header">
+      <div class="ph-eyebrow">Novel Ideas · Frontier Concepts</div>
+      <h2 class="ph-title">Three ideas that<br><em>don't exist yet.</em></h2>
+      <p class="ph-sub">Unconventional research concepts that sit in gaps the literature has not closed. These are the ideas with the highest originality potential — and the most to prove.</p>
+    </div>
+    <div class="page-body">
+      <div id="ideas-stack"></div>
+    </div>
+  </div>
+
+  <!-- ROADMAP -->
+  <div class="view" id="view-roadmap">
+    <div class="page-header">
+      <div class="ph-eyebrow">Publication &amp; Career Roadmap</div>
+      <h2 class="ph-title">From platform<br>to <em>publication.</em></h2>
+    </div>
+    <div class="page-body">
+      <div class="roadmap-grid">
+        <div class="roadmap-left">
+          <div class="rl-title">The five-year <em>research arc</em></div>
+          <p class="rl-body">A structured path from where you are now — a well-read graduate with a strong dissertation and a coherent research vision — to a published, practising researcher in a new subfield you helped name.</p>
+          <div class="rl-targets">
+            <div class="rlt-label">Target Programmes</div>
+            <div class="rlt-row"><span>KCL Social Psychology</span><span class="rlt-prog">2026</span></div>
+            <div class="rlt-row"><span>UCL Experimental Psychology</span><span class="rlt-prog">2026</span></div>
+            <div class="rlt-row"><span>Exeter Health Psychology</span><span class="rlt-prog">2026</span></div>
+            <div class="rlt-row"><span>Edinburgh Cultural Psych</span><span class="rlt-prog">2026</span></div>
+            <div class="rlt-row"><span>Bath Behavioural Science</span><span class="rlt-prog">2026</span></div>
+          </div>
+        </div>
+        <div class="timeline" id="roadmap-timeline"></div>
+      </div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<script>
+/* ── DATA ── */
+const themes = [
+  { num:'01', cat:'Moral Psychology', title:'Edible Morality', full:'Edible Morality — The Dining Table as a Moral Training Ground', gap:'Disgust studied as personality trait — never as a food-trained capacity',
+    desc:`Haidt's moral foundations theory identifies disgust as one of six moral foundations but treats it as a dispositional trait — something you have, not something that is cultivated. This programme investigates whether food practices themselves — vegetarianism, caste taboos, religious fasting, contamination rituals — actively calibrate the moral disgust system, generating predictable patterns of moral judgement that extend far beyond the table. India, with its unparalleled density of food-moral coding, is the natural field site.`,
+    rqs:['Does food disgust sensitivity predict moral harshness independently of political ideology, religiosity, or SES?','Can communal eating experimentally heighten purity-based moral judgements in a measurable, time-limited window?','Do individuals who follow strict food taboos show measurably different moral cognition profiles than those who do not?'],
+    researchers:['Jonathan Haidt — NYU Stern','Paul Rozin — University of Pennsylvania','Yoel Inbar — University of Toronto'],
+    readings:['The Righteous Mind (Haidt, 2012)','Disgust: The Gatekeeper Emotion (Rozin et al., 2000)','Moral Foundations Theory (Haidt & Joseph, 2004)'],
+    linkedTo:[1,2,3], connectedConcepts:['contamination logic','purity norms','in-group boundary marking','moral elevation'] },
+
+  { num:'02', cat:'Cognitive Psychology', title:'Hunger & Time', full:'Hunger & Temporal Distortion — How Appetite Reshapes Time Perception', gap:'Hunger studied metabolically and in decision-making — never as a temporal distortion mechanism',
+    desc:`The relationship between hunger and decision-making is documented (ego depletion, glucose effects on self-control). Entirely unexplored is hunger's effect on temporal cognition — how the hunger state distorts subjective time, alters delay discounting, and changes the psychological weight assigned to past and future selves. Fasting cultures provide a natural comparative experiment: religious practitioners who fast regularly may develop altered temporal self-continuity and a measurably different relationship with the future self.`,
+    rqs:['Does acute hunger compress the experienced present, making future consequences feel psychologically further away?','Do experienced fasters show reduced delay discounting after equivalent fasting periods compared to non-fasters?','Is the future self experienced as psychologically closer or more alien during hunger states?'],
+    researchers:['Walter Mischel — Columbia (delay discounting)','Roy Baumeister — ego depletion','Daniel Kahneman — future self research'],
+    readings:['Thinking Fast and Slow (Kahneman, 2011)','The Marshmallow Test (Mischel, 2014)','Ego Depletion (Baumeister et al., 1998)'],
+    linkedTo:[5,0], connectedConcepts:['delay discounting','future self-continuity','ego depletion','temporal self-appraisal'] },
+
+  { num:'03', cat:'Cultural Psychology', title:'Post-Migration Food Grief', full:'Post-Migration Food Grief — When the Taste of Home Becomes Inaccessible', gap:'Migration research ignores food inaccessibility as a primary grief object — no psychometric instrument exists',
+    desc:`Migration psychology focuses on social integration, language acquisition, and discrimination. The profound emotional significance of food inaccessibility — the inability to eat culturally defining foods in a new country — has been studied anthropologically but never psychometrically. This programme proposes "culinary grief" as a distinct psychological construct within cultural bereavement, with measurable effects on wellbeing, identity coherence, and belonging.`,
+    rqs:['Can culinary grief be distinguished from general homesickness using adapted grief measures?','Does food acculturation predict wellbeing outcomes more strongly than social acculturation in first-generation migrants?','Do Indian diaspora communities show distinct emotional regulation patterns around food inaccessibility compared to other groups?'],
+    researchers:['John Berry — acculturation framework','Kumbukani Maleta — migration and food','Andrew Baum — psychological effects of displacement'],
+    readings:['Acculturation: Living Successfully in Two Cultures (Berry, 2005)','Food and Migration (Kershen, 2002)','The ICG-R grief scale literature'],
+    linkedTo:[0,6], connectedConcepts:['culinary nostalgia','cultural bereavement','acculturation stress','food as transitional object'] },
+
+  { num:'04', cat:'Social Psychology', title:'Menu Semiotics', full:'The Moral Semiotics of Menus — How Restaurant Language Constructs Eating Identity', gap:'Menu language studied in marketing and consumer behaviour — never in moral or identity psychology',
+    desc:`Restaurant menus are among the most psychologically loaded texts in daily life. The language of menus — "artisan," "heritage," "clean," "indulgent," "guilt-free" — is saturated with moral and identity signals that prime the diner before they have eaten a single bite. This programme applies discourse analysis and experimental priming paradigms to investigate how menu semiotics shapes eating identity, body image, and post-meal self-perception across cultural and socioeconomic groups.`,
+    rqs:['Does "virtue language" on menus increase post-meal self-esteem independently of caloric content?','Do indulgence framings activate guilt-proneness vs. shame-proneness differently across individualist and collectivist cultures?','Can menu language prime moral self-licensing — leading to measurably different ethical decisions in tasks administered post-meal?'],
+    researchers:['Brian Wansink — food environment and behaviour','Claude Fischler — food, self, and identity','Roland Barthes — semiotics of food'],
+    readings:['Mindless Eating (Wansink, 2006)','Food, Self and Identity (Fischler, 1988)','Toward a Psychosociology of Contemporary Food Consumption (Barthes, 1961)'],
+    linkedTo:[0,4], connectedConcepts:['moral self-licensing','virtue signalling','food language priming','identity-based eating'] },
+
+  { num:'05', cat:'Embodied Cognition / Neuroscience', title:'Gut & Interoception', full:'Gut Feeling — Interoceptive Accuracy as a Mediator of Identity Stability', gap:'Interoception studied for emotion regulation — never as a mediator of cultural food identity or self-stability',
+    desc:`Interoception — the brain's reading of internal bodily signals — is now understood to be central to emotional processing and sense of self. Yet its relationship to cultural food identity has never been examined. This programme investigates whether cultures with strong embodied food practices (specific breathing before meals, mindful eating traditions, fasting protocols) develop measurably superior interoceptive accuracy, and whether this predicts greater psychological stability and identity coherence.`,
+    rqs:['Do practitioners of culturally embedded mindful eating rituals score higher on heartbeat counting tasks than matched controls?','Does interoceptive accuracy mediate the relationship between food identity strength and psychological wellbeing?','Can brief interoceptive eating interventions drawn from cultural traditions improve emotional regulation more efficiently than standard mindfulness protocols?'],
+    researchers:['Sarah Garfinkel — Sussex (interoception)','Anil Seth — consciousness and body prediction','Antonio Damasio — somatic markers'],
+    readings:['The Feeling of What Happens (Damasio, 2000)','Interoceptive inference, emotion, and the embodied self (Seth, 2013)','Knowing your own heart (Garfinkel & Critchley, 2013)'],
+    linkedTo:[1,5], connectedConcepts:['interoceptive accuracy','somatic markers','embodied self','predictive coding'] },
+
+  { num:'06', cat:'Existential Psychology', title:'Fasting & Existence', full:'Fasting as Existential Practice — Voluntary Deprivation and the Psychology of Self-Transcendence', gap:'Fasting studied nutritionally and in eating disorder literature — never as an existential or self-transcendence practice',
+    desc:`Every major religious and philosophical tradition contains a fasting practice, yet psychology has studied fasting almost exclusively through metabolic health or eating pathology. This programme investigates fasting as a voluntary existential practice — a deliberate use of bodily deprivation to alter self-concept, proximity to mortality, and meaning-making. Terror Management Theory and Self-Determination Theory provide the theoretical scaffolding; the Indian religious landscape provides an unparalleled range of fasting typologies for comparison.`,
+    rqs:['Does voluntary religious fasting reduce death anxiety through heightened sense of self-transcendence?','Do fasting practitioners report measurably stronger narrative identity coherence compared to non-fasting religious practitioners?','Is the psychological benefit of fasting attributed to the deprivation itself, the communal dimension, or the meaning structure surrounding the practice?'],
+    researchers:['Jeff Greenberg — Terror Management Theory','Sheldon Solomon — TMT','Viktor Frankl — logotherapy and meaning'],
+    readings:["The Worm at the Core (Solomon et al., 2015)","Man's Search for Meaning (Frankl, 1946)",'Self-Determination Theory (Deci & Ryan, 1985)'],
+    linkedTo:[0,1,4], connectedConcepts:['terror management','narrative identity','self-transcendence','voluntary suffering'] },
+
+  { num:'07', cat:'Digital Behaviour', title:'Algorithmic Food Self', full:'Algorithmic Food Memory — How Delivery Platforms Reconstruct Cultural Eating Identity', gap:'No study has examined how algorithmic food curation mediates or distorts cultural identity maintenance',
+    desc:`Platforms like Zomato don't just deliver food — they construct and reflect back a version of the user's food identity through order histories, recommendations, and "reorder" prompts. This programme examines whether the algorithmically mediated food self diverges from the culturally constructed food self, and what happens psychologically when it does. For migrant populations, this divergence may be especially significant: the algorithm may reinforce assimilation while the person believes they are maintaining cultural continuity.`,
+    rqs:["Do users' self-reported food identities diverge systematically from their digital order histories — and how do they narrate this gap?",'Does algorithmic recommendation exposure shift food identity self-concept over time in measurable ways?','For Indian migrants in the UK, does food-app use accelerate or retard food acculturation relative to cooking frequency?'],
+    researchers:['Eli Pariser — filter bubbles','danah boyd — digital identity','Chris Crandall — social norms and attitude change'],
+    readings:['The Filter Bubble (Pariser, 2011)','Digital Memory Studies (Garde-Hansen et al., 2009)','Extended Mind (Clark & Chalmers, 1998)'],
+    linkedTo:[2,3], connectedConcepts:['filter bubbles','extended mind','algorithmic identity','digital acculturation'] }
+];
+
+const connections = [
+  { a:0, b:5, insight:'Fasting as the most direct moral-eating feedback loop', why:'Both themes concern how deliberate food practices shape internal psychological architecture. A fasting practitioner is simultaneously training disgust sensitivity, existential awareness, and temporal cognition — the three themes intersect in a single cultural practice.' },
+  { a:2, b:6, insight:'Digital platforms as accelerants of culinary grief', why:'The algorithmic food self may actually make food grief worse: it surfaces foods the migrant no longer has access to, creating repeated reminders of loss while simultaneously pushing assimilated alternatives as "your food."' },
+  { a:0, b:3, insight:'Menu language as a moral priming system', why:'If the dining table trains moral disgust, then menu language is part of the moral curriculum. The semiotics of menus are not neutral descriptions — they are moral instructions delivered at the point of consumption.' },
+  { a:1, b:5, insight:'Fasting as a temporal cognition intervention', why:'If hunger distorts time perception and compresses the psychological future, voluntary fasting may be one of the few cultural technologies humans have developed specifically to manipulate their temporal self-relationship.' }
+];
+
+const intel = {
+  researchers:[
+    { name:'Jonathan Haidt', inst:'NYU Stern School', focus:'Moral foundations theory, disgust as a moral emotion, political psychology' },
+    { name:'Paul Rozin', inst:'University of Pennsylvania', focus:'Disgust, food psychology, moral emotions — the foundational researcher' },
+    { name:'Claude Fischler', inst:'CNRS Paris', focus:'Food, self, and identity — the sociologist whose work anchors this subfield' },
+    { name:'Sarah Garfinkel', inst:'University of Sussex', focus:'Interoception, body-brain interaction, emotion and the body' },
+    { name:'John Berry', inst:"Queen's University", focus:'Acculturation, cultural adaptation, migration psychology' },
+    { name:'Anil Seth', inst:'University of Sussex', focus:'Consciousness, predictive coding, embodied self' }
+  ],
+  journals:[
+    { name:'Appetite', focus:'Primary journal · Food & Behaviour' },
+    { name:'Social Psychological & Personality Science', focus:'Moral psych · Experimental' },
+    { name:'Cognition & Emotion', focus:'Emotion · Embodied cognition' },
+    { name:'Cultural Diversity & Ethnic Minority Psychology', focus:'Migration · Identity' },
+    { name:'Frontiers in Psychology', focus:'Open access · Broad scope' },
+    { name:'British Journal of Social Psychology', focus:'Social identity theory' }
+  ],
+  foundational:[
+    { title:'The Righteous Mind', author:'Jonathan Haidt · 2012', relevance:'The core text for moral foundations theory — your primary theoretical framework' },
+    { title:'Food, Self and Identity', author:'Claude Fischler · 1988', relevance:'The founding paper of food identity psychology. Essential reading.' },
+    { title:"The Omnivore's Dilemma", author:'Michael Pollan · 2006', relevance:'Illuminates the cultural-moral complexity of food choice — contextual background' },
+    { title:'Purity and Danger', author:'Mary Douglas · 1966', relevance:'Foundational anthropology of food taboos, contamination and moral order' },
+    { title:'The Man Who Ate Everything', author:'Jeffrey Steingarten · 1997', relevance:'Secondary — contextual richness on food identity' },
+    { title:"Man's Search for Meaning", author:'Viktor Frankl · 1946', relevance:'For the fasting/existential theme — voluntary suffering and meaning-making' }
+  ],
+  emerging:[
+    { title:'Interoception research (2018–present)', body:'A fast-growing body of work connecting gut-brain signalling to emotional processing and sense of self. Garfinkel at Sussex is the key lab.' },
+    { title:'Digital food behaviour post-pandemic', body:'COVID-19 dramatically accelerated food delivery app adoption globally. The psychological effects on food identity are entirely unresearched.' },
+    { title:'Decolonising food psychology', body:'A growing critique of Western-centric eating research. Indian, African, and East Asian food practices are radically underrepresented in the literature.' },
+    { title:'Epigenetics and food culture', body:'Emerging evidence that culturally transmitted food practices may leave measurable epigenetic traces — a potential long-term extension of the caste palate hypothesis.' }
+  ]
+};
+
+const ideas = [
+  { roman:'I', tag:'Sensory Psychology × Social Stratification', title:'The Caste Palate Study',
+    body:'If caste determines what you eat, does it also determine what you enjoy? This study proposes that sensory preferences — bitterness tolerance, umami sensitivity, texture aversion — are not merely biological but socially calibrated through generations of caste-coded food exposure. Using gustatory psychophysics alongside social identity measures, it would be the first study to empirically connect social hierarchy to taste neuroscience. Highly original. Potentially controversial. Unpublished anywhere.',
+    why:'First empirical intersection of caste sociology and sensory psychology · Natural sample in India · Target: Nature Human Behaviour' },
+  { roman:'II', tag:'Health Psychology × Existential Psychology × Identity', title:'The Last Meal Protocol',
+    body:'When people face death, what food do they ask for? Palliative care settings offer a unique natural experiment: the last meal request is one of the most psychologically revealing acts a human can perform. This qualitative-longitudinal programme analyses last meal requests across cultural groups through the lens of identity theory, attachment, and terror management — treating food as the final autobiography. Ethically complex. Emotionally profound. Entirely unstudied psychologically.',
+    why:'Cross-disciplinary: health psych × existential × food identity · Target: Health Psychology, Omega: Journal of Death and Dying' },
+  { roman:'III', tag:'Narrative Psychology × Archival Methods × Diaspora Studies', title:'The Recipe as Psychological Document',
+    body:'Handwritten family recipe collections are one of the most psychologically rich and entirely unstudied personal documents in existence. Annotations, substitutions, crossed-out ingredients, and inherited corrections contain a multigenerational record of identity negotiation, migration, memory, and loss. This mixed-methods programme applies narrative psychology and content analysis to Indian diaspora recipe collections — treating the recipe as a primary psychological text.',
+    why:'Novel methodology for cultural psychology · Indian diaspora sample · Links food identity to narrative identity theory · Target: Culture & Psychology' }
+];
+
+const roadmapSteps = [
+  { when:'Immediate · 2025', label:'Now', current:true,
+    title:'Theoretical Review — "Toward a Gastropsychology"',
+    desc:'A systematic review of existing literature at the intersection of food, identity, and moral psychology — identifying the gaps this programme proposes to fill. Writable now, from existing knowledge.',
+    journals:['Appetite','Frontiers in Psychology','Social & Personality Psychology Compass'] },
+  { when:"During Master's · 2026–27", label:'MSc', current:false,
+    title:'Empirical Study 1 — Food Disgust × Moral Judgement',
+    desc:'India vs. UK sample. Pre-registered on OSF. Uses the Moral Foundations Questionnaire and a novel food-specific disgust scale. Cross-cultural, rigorous, and original.',
+    journals:['SPPS','Cognition & Emotion','British Journal of Social Psychology'] },
+  { when:'PhD Year 1 · 2028', label:'PhD 1', current:false,
+    title:'Culinary Grief Scale — Development & Validation',
+    desc:'Psychometric development of the first validated instrument for culinary grief in migrant populations. Cross-validated across Indian, Chinese, and West African diaspora samples in the UK.',
+    journals:['Cultural Diversity & Ethnic Minority Psychology','Journal of Cross-Cultural Psychology'] },
+  { when:'PhD Year 2–3 · 2029–30', label:'PhD 2', current:false,
+    title:'Dissertation — Food Identity, Moral Cognition & Cultural Transmission',
+    desc:'A three-study programme integrating the disgust-morality nexus, culinary grief, and fasting as existential practice into a unified theoretical framework — the Gastric Psyche model.',
+    journals:['Target: monograph + 3 journal articles'] },
+  { when:'Long-term', label:'→', current:false,
+    title:'Lab & Open Research Infrastructure',
+    desc:'This platform extended into a fully ethical, IRB-approved research infrastructure. Cross-cultural participant recruitment. Open datasets. Collaborations with labs at KCL, Exeter, Edinburgh, and partners in India and Japan.',
+    journals:[] }
+];
+
+/* ── BUILD ── */
+function build() {
+  // Home index
+  const idx = document.getElementById('home-theme-index');
+  themes.forEach((t,i) => {
+    const row = document.createElement('div');
+    row.className = 'ti-row';
+    row.innerHTML = `<span class="ti-num">${t.num}</span><span class="ti-title">${t.full}</span><span class="ti-tag">${t.cat}</span>`;
+    row.onclick = () => showTheme(i);
+    idx.appendChild(row);
+  });
+
+  // Theme tab bar
+  const bar = document.getElementById('theme-nav-bar');
+  themes.forEach((t,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'tnb-btn' + (i===0?' active':'');
+    btn.textContent = t.num + ' ' + t.title;
+    btn.onclick = () => {
+      document.querySelectorAll('.tnb-btn').forEach((b,j) => b.classList.toggle('active', j===i));
+      showThemePanel(i);
+    };
+    bar.appendChild(btn);
+  });
+
+  // Theme panels
+  const panels = document.getElementById('theme-panels');
+  themes.forEach((t,i) => {
+    const savedNote = (() => { try { return localStorage.getItem('note-'+i)||''; } catch(e){return '';} })();
+    const linked = t.linkedTo.map(j => themes[j].title);
+    const p = document.createElement('div');
+    p.className = 'theme-detail' + (i===0?' active':'');
+    p.id = 'theme-panel-' + i;
+    p.innerHTML = `<div class="theme-body">
+      <div class="theme-top">
+        <div>
+          <div class="tt-cat">${t.cat}</div>
+          <div class="tt-name">${t.full}</div>
+          <div class="tt-gap">${t.gap}</div>
+        </div>
+        <div class="tt-desc">${t.desc}</div>
+      </div>
+      <div class="s-label">Research Questions</div>
+      <div class="theme-rqs">${t.rqs.map(q=>`<div class="rq-item"><span class="rq-mark">?</span><span class="rq-text">${q}</span></div>`).join('')}</div>
+      <div class="theme-two-col">
+        <div class="field-card">
+          <div class="fc-label">Key Researchers</div>
+          ${t.researchers.map(r=>`<div class="fc-item"><div class="fc-item-title">${r.split(' — ')[0]}</div><div class="fc-item-sub">${r.split(' — ')[1]||''}</div></div>`).join('')}
+        </div>
+        <div class="field-card">
+          <div class="fc-label">Foundational Reading</div>
+          ${t.readings.map(r=>`<div class="fc-item"><div class="fc-item-title">${r}</div></div>`).join('')}
+        </div>
+      </div>
+      <div class="theme-two-col">
+        <div class="notes-card">
+          <div class="nc-label">My Notes &amp; Thinking</div>
+          <textarea class="notes-textarea" id="notes-${i}" placeholder="Add your thoughts, questions, connections...">${savedNote}</textarea>
+          <div class="notes-save">
+            <span class="save-feedback" id="sf-${i}">Saved</span>
+            <button class="save-btn" onclick="saveNote(${i})">Save note</button>
+          </div>
+        </div>
+        <div class="field-card">
+          <div class="fc-label">Connected Themes</div>
+          <div class="synthesis-row" style="margin-bottom:1rem;">${linked.map(l=>`<span class="syn-tag linked">${l}</span>`).join('')}</div>
+          <div class="fc-label" style="margin-top:0.5rem;">Connected Concepts</div>
+          <div class="synthesis-row">${t.connectedConcepts.map(c=>`<span class="syn-tag">${c}</span>`).join('')}</div>
+        </div>
+      </div>
+    </div>`;
+    panels.appendChild(p);
+  });
+
+  // Synthesis matrix
+  const mx = document.getElementById('synthesis-matrix');
+  const hrow = document.createElement('div');
+  hrow.className = 'matrix-row header';
+  hrow.innerHTML = `<div class="matrix-cell header-cell">Theme</div>` + themes.map(t=>`<div class="matrix-cell header-cell">${t.num}</div>`).join('');
+  mx.appendChild(hrow);
+  themes.forEach((t,i) => {
+    const row = document.createElement('div');
+    row.className = 'matrix-row';
+    row.innerHTML = `<div class="matrix-cell theme-cell">${t.title}</div>` +
+      themes.map((_,j) => i===j
+        ? `<div class="matrix-cell" style="background:rgba(14,13,11,0.04);text-align:center;">—</div>`
+        : `<div class="matrix-cell link-cell ${t.linkedTo.includes(j)?'strong-link':''}">${t.linkedTo.includes(j)?'●':'·'}</div>`
+      ).join('');
+    mx.appendChild(row);
+  });
+
+  // Connections
+  const cg = document.getElementById('connection-grid');
+  connections.forEach(c => {
+    const card = document.createElement('div');
+    card.className = 'connection-card';
+    card.innerHTML = `<div class="cc-themes"><span class="cc-theme-pill">${themes[c.a].title}</span><span class="cc-connector">↔</span><span class="cc-theme-pill">${themes[c.b].title}</span></div><div class="cc-insight">${c.insight}</div><div class="cc-why">${c.why}</div>`;
+    cg.appendChild(card);
+  });
+
+  // Field intelligence
+  const ig = document.getElementById('intel-grid');
+  const rc = document.createElement('div'); rc.className='intel-card';
+  rc.innerHTML=`<div class="ic-label">Key Researchers</div>`+intel.researchers.map(r=>`<div class="researcher-item"><div class="ri-name">${r.name}</div><div class="ri-inst">${r.inst}</div><div class="ri-focus">${r.focus}</div></div>`).join('');
+  ig.appendChild(rc);
+  const jc = document.createElement('div'); jc.className='intel-card';
+  jc.innerHTML=`<div class="ic-label">Target Journals</div>`+intel.journals.map(j=>`<div class="journal-item"><div class="ji-name">${j.name}</div><div class="ji-focus">${j.focus}</div></div>`).join('');
+  ig.appendChild(jc);
+  const fc = document.createElement('div'); fc.className='intel-card';
+  fc.innerHTML=`<div class="ic-label">Foundational Texts</div>`+intel.foundational.map(f=>`<div class="foundational-item"><div class="fi-title">${f.title}</div><div class="fi-author">${f.author}</div><div class="fi-relevance">${f.relevance}</div></div>`).join('');
+  ig.appendChild(fc);
+  const ec = document.createElement('div'); ec.className='intel-card';
+  ec.innerHTML=`<div class="ic-label">Emerging Directions</div>`+intel.emerging.map(e=>`<div class="emerging-item"><div class="ei-title">${e.title}</div><div class="ei-body">${e.body}</div></div>`).join('');
+  ig.appendChild(ec);
+
+  // Ideas
+  const is = document.getElementById('ideas-stack');
+  ideas.forEach(idea => {
+    const b = document.createElement('div'); b.className='idea-block';
+    b.innerHTML=`<div class="ib-roman">${idea.roman}</div><div><div class="ib-tag">${idea.tag}</div><div class="ib-title">${idea.title}</div></div><div><div class="ib-body">${idea.body}</div><div class="ib-why">${idea.why}</div></div>`;
+    is.appendChild(b);
+  });
+
+  // Roadmap
+  const rt = document.getElementById('roadmap-timeline');
+  roadmapSteps.forEach(step => {
+    const d = document.createElement('div'); d.className='timeline-step';
+    d.innerHTML=`<div class="ts-marker${step.current?' current':''}"><span>${step.label}</span></div><div class="ts-body"><div class="ts-when">${step.when}</div><div class="ts-title">${step.title}</div><div class="ts-desc">${step.desc}</div>${step.journals.length?`<div class="ts-journals">${step.journals.map(j=>`<span class="ts-journal">${j}</span>`).join('')}</div>`:''}</div>`;
+    rt.appendChild(d);
+  });
+}
+
+/* ── NAVIGATION ── */
+function show(viewId, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + viewId).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function toggleThemeNav(btn) {
+  const subnav = document.getElementById('theme-subnav');
+  const opening = !subnav.classList.contains('open');
+  subnav.classList.toggle('open');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (opening) {
+    show('themes');
+    btn.classList.add('active');
+    showThemePanel(0);
+    document.querySelectorAll('.theme-sub-btn').forEach((b,i) => b.classList.toggle('active', i===0));
+    document.querySelectorAll('.tnb-btn').forEach((b,i) => b.classList.toggle('active', i===0));
+  }
+}
+
+function showTheme(idx) {
+  const subnav = document.getElementById('theme-subnav');
+  subnav.classList.add('open');
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-themes').classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.trim().startsWith('Research Themes'));
+  });
+  document.querySelectorAll('.theme-sub-btn').forEach((b,i) => b.classList.toggle('active', i===idx));
+  document.querySelectorAll('.tnb-btn').forEach((b,i) => b.classList.toggle('active', i===idx));
+  showThemePanel(idx);
+  window.scrollTo(0,0);
+}
+
+function showThemePanel(idx) {
+  document.querySelectorAll('.theme-detail').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById('theme-panel-' + idx);
+  if (panel) panel.classList.add('active');
+}
+
+function saveNote(idx) {
+  const val = document.getElementById('notes-' + idx).value;
+  try { localStorage.setItem('note-' + idx, val); } catch(e) {}
+  const fb = document.getElementById('sf-' + idx);
+  if (fb) { fb.style.opacity = '1'; setTimeout(() => { fb.style.opacity = '0'; }, 1500); }
+}
+
+build();
+</script>
+</body>
+</html>
